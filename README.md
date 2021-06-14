@@ -1,6 +1,120 @@
 # IEX-ELK-TopsTransform
-Transform IEX ( https://api.iextrading.com/1.0/tops ) Tops Json output to ELK Bulk API json. Depending on command lines args push to ELK localhost or file.
-Currently this endpoint is free without need for an API_Token.  Please review https://iexcloud.io/ ; Please attribute IEX, as it is a condition of use
+Transform IEX ( https://api.iextrading.com/1.0/tops ) Tops API endpoint will only work during marketplace trading hours; 
+otherwise it returns a 
+"[]"
+Null List.
+Simple curl at a Linux prompt will retrieve the tops endpoint response into the json file.
+curl 'https://api.iextrading.com/1.0/tops' >  IEX-ELK-Transform.json
+
+The python code requires the following modules:
+import json
+import pandas as pd
+import pycurl
+import requests
+import sys
+from io import BytesIO
+
+To retrieve these utilize the command:
+pip instal json pandas pycurl requests
+
+Typing with no command line args, prints the "usage"
+python iex-elk.py
+Usage:
+['iex-elk.py']
+usage: python iex-elk.py ELK-index_name  
+or usage: python iex-elk.py ELK-index_name src_file
+or usage: python iex-elk.py ELK-index_name src_file dest_file
+
+The 1st usage example: 
+    python iex-elk.py ELK-index_name 
+queries and retrieves TOPS endpoint and pushes JSON response into ELK localhost, if ELK not running and exception will return reminder to start ELK
+
+The 2nd usage example: 
+    python iex-elk.py ELK-index_name src_file
+Reads a previously captured IEX Tops (possibly obtained from curl) 
+and pushes IEX JSON response into ELK localhost, if ELK not running and exception will return reminder to start ELK
+
+The 3rd usage example: 
+    python iex-elk.py ELK-index_name src_file_name dest_file_name
+Reads a previously captured IEX Tops (possibly obtained from curl) 
+and pushes IEX JSON response into the dest_file_name
+
+The ELK Mapping is noted below. 
+If you push this response without the mapping the "date" fields will be interpreted as "longs", then not suitable for date / timestamp fields.
+In Kibana, the Dev Tools ( https://www.elastic.co/guide/en/kibana/current/console-kibana.html ) embedded command console enables creating index and mapping - found on left hand side of Kibana interface, see below screen shot files in github.  The index name below is "stocks1" that must match the index-name utilized in the command line invocation. 
+PUT /stocks1
+{
+  "mappings": {
+      "properties": {
+        "askPrice": {
+          "type": "float"
+        },
+        "askSize": {
+          "type": "long"
+        },
+        "bidPrice": {
+          "type": "float"
+        },
+        "bidSize": {
+          "type": "long"
+        },
+        "lastSalePrice": {
+          "type": "float"
+        },
+        "lastSaleSize": {
+          "type": "long"
+        },
+        "lastSaleTime": {
+          "type": "date",
+          "format": "epoch_millis"
+        },
+        "lastUpdated": {
+          "type": "date",
+          "format": "epoch_millis"
+        },
+        "marketPercent": {
+          "type": "long"
+        },
+        "sector": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "securityType": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "symbol": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "volume": {
+          "type": "long"
+        }
+      }
+    }
+  }
+
+( https://kb.objectrocket.com/elasticsearch/how-to-delete-an-index-in-elasticsearch-using-kibana )
+DELETE /stocks1
+
+Tops Json output to ELK Bulk API json. Depending on command lines args get from file, or the endpoing then push to ELK localhost or file.
+The various options enables ease of testing without live link.
+Currently this endpoint is free without need for an API_Token.  Please review https://iexcloud.io/ ; Please attribute IEX, as it is a condition of use.  
 
 https://iexcloud.io/disclaimers/
 https://iexcloud.io/terms/ 
