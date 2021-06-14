@@ -15,9 +15,9 @@ import sys
 from io import BytesIO
 
 To retrieve these utilize the command:
-pip instal json pandas pycurl requests
+pip install json pandas pycurl requests
 
-Typing with no command line args, prints the "usage"
+Typing with no command line args, prints the "usage"; also see related screenshot checked in to repo, named iex-elk.py usage.
 python iex-elk.py
 Usage:
 ['iex-elk.py']
